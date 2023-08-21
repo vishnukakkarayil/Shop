@@ -1,9 +1,13 @@
-import React from 'react'
+import React, { useState } from 'react'
 import Navbar from '../components/Navbar'
 import Announcement from '../components/Announcement'
 import Footer from '../components/Footer'
 import styled from 'styled-components'
 import { Add, Remove } from '@mui/icons-material'
+import { useSelector } from 'react-redux'
+import StripeCheckout from 'react-stripe-checkout'
+
+const KEY = process.env.REACT_APP_STRIPE
 
 const Container = styled.div``;
 const Wrapper = styled.div`
@@ -123,6 +127,13 @@ const Button = styled.button`
 
 
 const Cart = () => {
+    const cart = useSelector(state => state.cart)
+    const [stripeToken, setStripeToken] = useState(null)
+
+    const onToken = (token) => {
+        setStripeToken(token)
+    }
+console.log(stripeToken)
   return (
     <Container>
         <Navbar />
@@ -139,51 +150,34 @@ const Cart = () => {
             </Top>
             <Bottom>
                 <Info>
-                    <Product>
-                        <ProductDetail>
-                            <Image src="https://media.istockphoto.com/id/1350560575/photo/pair-of-blue-running-sneakers-on-white-background-isolated.webp?b=1&s=170667a&w=0&k=20&c=liUSgX6SafJ7HWvefFqR9-pnf3KuH6v1lwQ6iEpePWc="/>
-                            <Details>
-                                <ProductName><b>Product</b> JESSI THUNDER SHOE</ProductName>
-                                <ProductId><b>iD</b> 36546565444</ProductId>
-                                <ProductColor color="blue"/>
-                                <ProductSize><b>Size</b>37.5</ProductSize>
-                            </Details>
-                        </ProductDetail>
-                        <PriceDetail>
-                            <ProductAmountContainer>
-                                <Add />
-                                <ProductAmount>2</ProductAmount>
-                                <Remove />
-                            </ProductAmountContainer>
-                            <ProductPrice>$ 30</ProductPrice>
-                        </PriceDetail>                        
-                    </Product>
-                    <Hr />
-                    <Product>
-                        <ProductDetail>
-                            <Image src="https://media.istockphoto.com/id/1350560575/photo/pair-of-blue-running-sneakers-on-white-background-isolated.webp?b=1&s=170667a&w=0&k=20&c=liUSgX6SafJ7HWvefFqR9-pnf3KuH6v1lwQ6iEpePWc="/>
-                            <Details>
-                                <ProductName><b>Product</b> JESSI THUNDER SHOE</ProductName>
-                                <ProductId><b>iD</b> 36546565444</ProductId>
-                                <ProductColor color="blue"/>
-                                <ProductSize><b>Size</b>37.5</ProductSize>
-                            </Details>
-                        </ProductDetail>
-                        <PriceDetail>
-                            <ProductAmountContainer>
-                                <Add />
-                                <ProductAmount>2</ProductAmount>
-                                <Remove />
-                            </ProductAmountContainer>
-                            <ProductPrice>$ 30</ProductPrice>
-                        </PriceDetail>                        
-                    </Product>
+                    {cart.products.map(product => (                   
+                        <Product>
+                            <ProductDetail>
+                                <Image src={product.img}/>
+                                <Details>
+                                    <ProductName><b>Product</b> {product.title}</ProductName>
+                                    <ProductId><b>iD</b> {product._id}</ProductId>
+                                    <ProductColor color={product.color} />
+                                    <ProductSize><b>Size</b>{product.size}</ProductSize>
+                                </Details>
+                            </ProductDetail>
+                            <PriceDetail>
+                                <ProductAmountContainer>
+                                    <Add />
+                                    <ProductAmount>{product.qantity}</ProductAmount>
+                                    <Remove />
+                                </ProductAmountContainer>
+                                <ProductPrice>$ {product.price * product.qantity}</ProductPrice>
+                            </PriceDetail>                        
+                        </Product>
+                    ))}
+                    <Hr />                    
                 </Info>
                 <Summery>
                     <SummeryTitle>ORDER SUMMERY</SummeryTitle>
                     <SummeryItem>
                         <SummeryItemText>Subtotal</SummeryItemText>
-                        <SummeryItemPrice>$ 80</SummeryItemPrice>
+                        <SummeryItemPrice>$ {cart.total}</SummeryItemPrice>
                     </SummeryItem>
                     <SummeryItem>
                         <SummeryItemText>Estimate Shiping</SummeryItemText>
@@ -195,9 +189,21 @@ const Cart = () => {
                     </SummeryItem>
                     <SummeryItem  type="total">
                         <SummeryItemText>Total</SummeryItemText>
-                        <SummeryItemPrice>$ 80</SummeryItemPrice>
+                        <SummeryItemPrice>$ {cart.total}</SummeryItemPrice>
                     </SummeryItem>
-                    <Button>Checkout now</Button>
+                    <StripeCheckout
+                        name="Vizru Shop"
+                        image="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSBdeEEzizZAe2o8OZPfGPy74tp5fcywNNgA4tOsyBpmA&s"
+                        billingAddress
+                        shippingAddress
+                        description={`Your total is $${cart.total}`}
+                        amount={cart.total*100}
+                        token={onToken}
+                        stripeKey={KEY}
+                    >
+                        <Button>Checkout now</Button>
+                    </StripeCheckout>
+                    
                 </Summery>
             </Bottom>
         </Wrapper>

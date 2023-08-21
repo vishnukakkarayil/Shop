@@ -7,6 +7,8 @@ import Footer from "../components/Footer"
 import { Add, Remove } from "@mui/icons-material"
 import { publicRequest } from "../requestMethods";
 import { useLocation } from "react-router-dom"
+import { addProduct } from "../redux/cartRedux"
+import { useDispatch } from "react-redux"
 
 const Container = styled.div``;
 const Wrapper = styled.div`
@@ -61,7 +63,7 @@ const FilterColor = styled.div`
 width: 20px;
 height: 20px;
 border-radius: 50%;
-border-color: ${props => props.color};
+background-color: ${props => props.color};
 margin: 0px 5px;
 cursor: pointer;
 `;
@@ -111,18 +113,37 @@ const Product = () => {
     const location = useLocation()
     const id = location.pathname.split("/")[2];
     const [product, setProduct] = useState({})
+    const [quantity, setQuantity] = useState(1)
+    const [color, setColor] = useState("")
+    const [size, setSize] = useState("")
+    const dispatch = useDispatch()
 
     useEffect(() => {
-        console.log(publicRequest)
+        console.log(publicRequest);
         const getProduct = async () => {
-            try{
-                const res = await publicRequest.get("/products/find/64a90f105764400b574b0732")
-                console.log(res.data,'-=-=-=-')
-                setProduct(res.data);
-            } catch(err){ console.log(err,"=====")}
-        }
-        getProduct()
-    }, [id])
+          try {
+            const res = await publicRequest.get("/products/find/64a90f105764400b574b0732");
+            console.log(res.data, "-=-=-=-");
+            setProduct(res.data);
+          } catch (err) {
+            console.log(err, "=====");
+          }
+        };
+        getProduct();
+      }, [id]);
+
+const handleQuantity = (type) => {
+    if(type === "dec") {
+        if(quantity > 1) setQuantity(quantity - 1)
+    }
+    else setQuantity(quantity + 1)
+}
+
+const handleClick = () => {
+    console.log('-=-=-=-=-=-=-=-=-=-')
+    dispatch(addProduct({...product, quantity, color, size}))
+}
+
   return (
     <Container>
         <Navbar />
@@ -132,35 +153,31 @@ const Product = () => {
                 <Image src={product.img}></Image>
             </ImageContainer>
             <InfoContainer>
-                <Title>Lorem ipsum</Title>
-                <Desc>In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content. Lorem ipsum may be used as a placeholder before final copy is available. In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content. Lorem ipsum may be used as a placeholder before final copy is availableIn publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content. Lorem ipsum may be used as a placeholder before final copy is available</Desc>
-                <Price>$ 20</Price>
+                <Title>{product.title}</Title>
+                <Desc>{product.desc}</Desc>
+                <Price>$ {product.price}</Price>
                 <FilterContainer>
                     <Filter>
                         <FilterTitle>Color</FilterTitle>
-                        <FilterColor color="black" />
-                        <FilterColor color="darkblue" />
-                        <FilterColor color="gray" />
+                        {
+                            product.color?.map(c => <FilterColor color={c} key={c} onClick={() => setColor(c)} />
+                        )}
+                        
                     </Filter>
                     <Filter>
                         <FilterTitle>Size</FilterTitle>
-                        <FilterSize>
-                            <FilterSizeOption>XS</FilterSizeOption>
-                            <FilterSizeOption>S</FilterSizeOption>
-                            <FilterSizeOption>M</FilterSizeOption>
-                            <FilterSizeOption>L</FilterSizeOption>
-                            <FilterSizeOption>XL</FilterSizeOption>
-                            <FilterSizeOption>XXL</FilterSizeOption>
+                        <FilterSize onChange={(e) => setSize(e.target.value)}>
+                            {product.size?.map( s => <FilterSizeOption key={s}>{s}</FilterSizeOption> )}                            
                         </FilterSize>
                     </Filter>
                 </FilterContainer>
                 <AddContainer>
                     <AmountContainer>
-                        <Remove />
-                        <Amount>1</Amount>
-                        <Add />
+                        <Remove onClick = {() => handleQuantity('dec')} />
+                        <Amount>{quantity}</Amount>
+                        <Add onClick = {() => handleQuantity('inc')} />
                     </AmountContainer>
-                    <Button>ADD TO CART</Button>
+                    <Button onClick={() => handleClick()}>ADD TO CART</Button>
                 </AddContainer>
             </InfoContainer>
         </Wrapper>
